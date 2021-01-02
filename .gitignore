@@ -1,2 +1,13 @@
-
+# directories
 .idea/
+data/
+dataset/
+
+# specific type files
+**/**.pyc
+
+# files
+main.py
+data.zip
+retina.py
+
