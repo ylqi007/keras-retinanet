@@ -12,6 +12,8 @@
 # ================================================================
 
 import numpy as np
+import tensorflow as tf
+
 """
 # check stack()
 
@@ -48,3 +50,127 @@ converted_bbox = np.concatenate(
     [(boxes[..., :2] + boxes[..., 2:]) / 2.0, (boxes[..., 2:] - boxes[..., :2]) / 2.0],
     axis=-1)
 print(converted_bbox)
+
+
+"""
+# Check meshgrid
+
+* rx: tf.Tensor([0.5 1.5 2.5], shape=(3,), dtype=float32)
+* ry: tf.Tensor([0.5 1.5 2.5 3.5], shape=(4,), dtype=float32)
+
+* centers after meshgridding:
+[<tf.Tensor: shape=(4, 3), dtype=float32, numpy=
+array([[0.5, 1.5, 2.5],
+       [0.5, 1.5, 2.5],
+       [0.5, 1.5, 2.5],
+       [0.5, 1.5, 2.5]], dtype=float32)>, 
+ <tf.Tensor: shape=(4, 3), dtype=float32, numpy=
+array([[0.5, 0.5, 0.5],
+       [1.5, 1.5, 1.5],
+       [2.5, 2.5, 2.5],
+       [3.5, 3.5, 3.5]], dtype=float32)>]
+* shape of the output of meshgrid: (4, 3)
+
+* centers after stacking tf.Tensor(
+[[[0.5 0.5]
+  [1.5 0.5]
+  [2.5 0.5]]
+
+ [[0.5 1.5]
+  [1.5 1.5]
+  [2.5 1.5]]
+
+ [[0.5 2.5]
+  [1.5 2.5]
+  [2.5 2.5]]
+
+ [[0.5 3.5]
+  [1.5 3.5]
+  [2.5 3.5]]], shape=(4, 3, 2), dtype=float32)
+
+"""
+
+
+def _get_anchors(feature_height=4, feature_width=3, level=3):
+    rx = tf.range(feature_width, dtype=tf.float32) + 0.5
+    ry = tf.range(feature_height, dtype=tf.float32) + 0.5
+    print('rx: \n', rx)
+    print('ry: \n', ry)
+    print('\n')
+    centers = tf.meshgrid(rx, ry)
+    print('centers after meshgridding:\n', centers)
+    print('\n')
+    centers = tf.stack(centers, axis=-1)
+    print('centers after stacking\n', centers)
+    center_expand_dims = tf.expand_dims(centers, axis=-2)
+    print('center_expand_dims:\n', center_expand_dims)
+    center_tiled = tf.tile(center_expand_dims, [1, 1, 5, 1])
+    print('center_tiled:\n', center_tiled)
+
+
+print('==============')
+# _get_anchors()
+
+
+# TODO: Splitline -- AnchorBox._compute_dims()
+def _compute_dims():
+    """
+    anchor_dims:
+         [<tf.Tensor: shape=(1, 1, 2), dtype=float32, numpy=array([[[ 8., 16.]]], dtype=float32)>, ==> area=8, ratio=0.5, scale=4
+         <tf.Tensor: shape=(1, 1, 2), dtype=float32, numpy=array([[[16., 32.]]], dtype=float32)>, ==> area=8, ratio=0.5, scale=8
+         <tf.Tensor: shape=(1, 1, 2), dtype=float32, numpy=array([[[11.313708, 11.313708]]], dtype=float32)>, ==> area=8, ratio=1, scale=4
+         <tf.Tensor: shape=(1, 1, 2), dtype=float32, numpy=array([[[22.627417, 22.627417]]], dtype=float32)>]  ==> area=8, ratio=1, scale=4
+        * Above 4 tf.Tensor is for area=8
+
+    tf.stack(anchor_dims, axis=-2):
+         tf.Tensor(
+            [[[[ 8.       16.      ]
+               [16.       32.      ]
+               [11.313708 11.313708]
+               [22.627417 22.627417]]]], shape=(1, 1, 4, 2), dtype=float32)
+        * stack 4 tensors into 1 tensor, with axis=-2 equals number of tensors
+
+    anchor_dims_all:
+         [<tf.Tensor: shape=(1, 1, 4, 2), dtype=float32, numpy=     ==> area=8
+            array([[[[ 8.      , 16.      ],                            ==> area=8, ratio=0.5
+                     [16.      , 32.      ],
+                     [11.313708, 11.313708],                            ==> area=8, ratio=1
+                     [22.627417, 22.627417]]]], dtype=float32)>,
+        <tf.Tensor: shape=(1, 1, 4, 2), dtype=float32, numpy=       ==> area=16
+            array([[[[11.313708, 22.627417],                            ==> area=16, ratio=0.5
+                     [22.627417, 45.254833],
+                     [16.      , 16.      ],                            ==> area=16, ratio=1
+                     [32.      , 32.      ]]]], dtype=float32)>,
+        <tf.Tensor: shape=(1, 1, 4, 2), dtype=float32, numpy=       ==> area=32
+            array([[[[16.      , 32.      ],                            ==> area=32, ratio=0.5
+                     [32.      , 64.      ],
+                     [22.627417, 22.627417],                            ==> area=32, ratio=01
+                     [45.254833, 45.254833]]]], dtype=float32)>]
+    :return:
+    """
+    anchor_dims_all = []
+    for area in [8, 16, 32]:
+        anchor_dims = []    # all anchor_dims for a specific area
+        for ratio in [0.5, 1.0]:
+            anchor_height = tf.math.sqrt(area / ratio)
+            anchor_width = area / anchor_height
+            print('[anchor_width, anchor_height]:\n', [anchor_width, anchor_height])
+            print('stack([anchor_width, anchor_height]):\n', tf.stack([anchor_width,
+                                                                       anchor_height], axis=-1))
+            dims = tf.reshape(
+                tf.stack([anchor_width, anchor_height], axis=-1), [1, 1, 2]
+            )
+            print('dims:\n', dims)
+            for scale in [4, 8]:
+                anchor_dims.append(dims * scale)
+            print('anchor_dims:\n', anchor_dims)
+        print('@@@@\n', anchor_dims)
+        print('####\n', tf.stack(anchor_dims, axis=-2))
+        anchor_dims_all.append(tf.stack(anchor_dims, axis=-2))
+        print('$$$$\n', anchor_dims_all)
+    return anchor_dims_all
+
+
+print("\n==========================================================")
+print("========== _compute_dims() ==========")
+_compute_dims()
