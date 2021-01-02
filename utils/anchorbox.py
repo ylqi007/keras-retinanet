@@ -81,7 +81,13 @@ class AnchorBox:
 
     def _get_anchors(self, feature_height, feature_width, level):
         """
-        Generate anchor boxes for a given feature map size and level.
+        Generate anchor boxes for a given feature map size and level. (计算一个feature map的anchors)
+
+        centers after tf.tile(...): shape=(len(ry), len(rx), num_anchors, 2)
+        _anchor_dims: [(1, 1, # of anchors, 2), (1, 1, num_anchors, 2), ...]
+        _anchor_dims[level-3]: shape=(1, 1, # of anchors, 2)
+        _anchor_dimes[level-3] after tiling: shape=(feature_h, feature_w, num_anchors, 2)
+        anchors = tf.concat([centers, dims], axis=-1): shape=(feature_h, feature_w, num_anchors, 4]
 
         :param feature_height: An integer representing the height of the feature map.
         :param feature_width: An integer representing the width of the feature map.
@@ -89,18 +95,22 @@ class AnchorBox:
         :return: anchor boxes with the shape `(feature_height * feature_width * num_anchors, 4)`
         """
         # TODO: Do not understand.
+        # indexes of x-axis and y-axis
         rx = tf.range(feature_width, dtype=tf.float32) + 0.5
         ry = tf.range(feature_height, dtype=tf.float32) + 0.5
+        # centers of each cell after striding, shape=(len(ry), len(rx), 2)
         centers = tf.stack(tf.meshgrid(rx, ry), axis=-1) * self._strides[level - 3]
-        centers = tf.expand_dims(centers, axis=-2)
-        centers = tf.tile(centers, [1, 1, self._num_anchors, 1])
+        centers = tf.expand_dims(centers, axis=-2)      # shape=(len(ry), len(rx), 1, 2)
+        centers = tf.tile(centers, [1, 1, self._num_anchors, 1]) # shape=(len(ry), len(rx), num_anchors, 2)
+        # dims in each cell
         dims = tf.tile(
             self._anchor_dims[level - 3], [feature_height, feature_width, 1, 1]
-        )
-        anchors = tf.concat([centers, dims], axis=-1)
+        )   # shape=(feature_h, feature_w, # of anchors, 2)
+        # concat centers and dims, then get anchors
+        anchors = tf.concat([centers, dims], axis=-1)   # shape=(feature_h, feature_w, num_anchors, 4]
         return tf.reshape(
             anchors, [feature_height * feature_width * self._num_anchors, 4]
-        )
+        )   # shape=(feature_h * feature_w * * num_anchors, 4)
 
     def get_anchors(self, image_height, image_width):
         """

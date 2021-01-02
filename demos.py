@@ -52,66 +52,6 @@ converted_bbox = np.concatenate(
 print(converted_bbox)
 
 
-"""
-# Check meshgrid
-
-* rx: tf.Tensor([0.5 1.5 2.5], shape=(3,), dtype=float32)
-* ry: tf.Tensor([0.5 1.5 2.5 3.5], shape=(4,), dtype=float32)
-
-* centers after meshgridding:
-[<tf.Tensor: shape=(4, 3), dtype=float32, numpy=
-array([[0.5, 1.5, 2.5],
-       [0.5, 1.5, 2.5],
-       [0.5, 1.5, 2.5],
-       [0.5, 1.5, 2.5]], dtype=float32)>, 
- <tf.Tensor: shape=(4, 3), dtype=float32, numpy=
-array([[0.5, 0.5, 0.5],
-       [1.5, 1.5, 1.5],
-       [2.5, 2.5, 2.5],
-       [3.5, 3.5, 3.5]], dtype=float32)>]
-* shape of the output of meshgrid: (4, 3)
-
-* centers after stacking tf.Tensor(
-[[[0.5 0.5]
-  [1.5 0.5]
-  [2.5 0.5]]
-
- [[0.5 1.5]
-  [1.5 1.5]
-  [2.5 1.5]]
-
- [[0.5 2.5]
-  [1.5 2.5]
-  [2.5 2.5]]
-
- [[0.5 3.5]
-  [1.5 3.5]
-  [2.5 3.5]]], shape=(4, 3, 2), dtype=float32)
-
-"""
-
-
-def _get_anchors(feature_height=4, feature_width=3, level=3):
-    rx = tf.range(feature_width, dtype=tf.float32) + 0.5
-    ry = tf.range(feature_height, dtype=tf.float32) + 0.5
-    print('rx: \n', rx)
-    print('ry: \n', ry)
-    print('\n')
-    centers = tf.meshgrid(rx, ry)
-    print('centers after meshgridding:\n', centers)
-    print('\n')
-    centers = tf.stack(centers, axis=-1)
-    print('centers after stacking\n', centers)
-    center_expand_dims = tf.expand_dims(centers, axis=-2)
-    print('center_expand_dims:\n', center_expand_dims)
-    center_tiled = tf.tile(center_expand_dims, [1, 1, 5, 1])
-    print('center_tiled:\n', center_tiled)
-
-
-print('==============')
-# _get_anchors()
-
-
 # TODO: Splitline -- AnchorBox._compute_dims()
 def _compute_dims():
     """
@@ -174,3 +114,181 @@ def _compute_dims():
 print("\n==========================================================")
 print("========== _compute_dims() ==========")
 _compute_dims()
+
+
+# =============================================================================
+# _get_anchor()
+# =============================================================================
+"""
+# _get_anchor()
+# Check meshgrid
+
+* rx: tf.Tensor([0.5 1.5 2.5], shape=(3,), dtype=float32)
+* ry: tf.Tensor([0.5 1.5 2.5 3.5], shape=(4,), dtype=float32)
+
+* centers after meshgridding:
+    [<tf.Tensor: shape=(4, 3), dtype=float32, numpy=
+    array([[0.5, 1.5, 2.5],
+           [0.5, 1.5, 2.5],
+           [0.5, 1.5, 2.5],
+           [0.5, 1.5, 2.5]], dtype=float32)>, 
+     <tf.Tensor: shape=(4, 3), dtype=float32, numpy=
+    array([[0.5, 0.5, 0.5],
+           [1.5, 1.5, 1.5],
+           [2.5, 2.5, 2.5],
+           [3.5, 3.5, 3.5]], dtype=float32)>]
+* shape of the output of meshgrid: (4, 3)
+
+* centers after stacking 
+tf.Tensor(
+[[[0.5 0.5]
+  [1.5 0.5]
+  [2.5 0.5]]
+
+ [[0.5 1.5]
+  [1.5 1.5]
+  [2.5 1.5]]
+
+ [[0.5 2.5]
+  [1.5 2.5]
+  [2.5 2.5]]
+
+ [[0.5 3.5]
+  [1.5 3.5]
+  [2.5 3.5]]], shape=(4, 3, 2), dtype=float32)
+
+center_expand_dims:
+ tf.Tensor(
+[[[[0.5 0.5]]
+  [[1.5 0.5]]
+  [[2.5 0.5]]]
+
+ [[[0.5 1.5]]
+  [[1.5 1.5]]
+  [[2.5 1.5]]]
+
+ [[[0.5 2.5]]
+  [[1.5 2.5]]
+  [[2.5 2.5]]]
+
+ [[[0.5 3.5]]
+  [[1.5 3.5]]
+  [[2.5 3.5]]]], shape=(4, 3, 1, 2), dtype=float32)
+
+center_tiled:
+ tf.Tensor(
+[[[[0.5 0.5]
+   [0.5 0.5]
+   [0.5 0.5]
+   [0.5 0.5]
+   [0.5 0.5]]
+
+  [[1.5 0.5]
+   [1.5 0.5]
+   [1.5 0.5]
+   [1.5 0.5]
+   [1.5 0.5]]
+
+  [[2.5 0.5]
+   [2.5 0.5]
+   [2.5 0.5]
+   [2.5 0.5]
+   [2.5 0.5]]]
+
+
+ [[[0.5 1.5]
+   [0.5 1.5]
+   [0.5 1.5]
+   [0.5 1.5]
+   [0.5 1.5]]
+
+  [[1.5 1.5]
+   [1.5 1.5]
+   [1.5 1.5]
+   [1.5 1.5]
+   [1.5 1.5]]
+
+  [[2.5 1.5]
+   [2.5 1.5]
+   [2.5 1.5]
+   [2.5 1.5]
+   [2.5 1.5]]]
+
+
+ [[[0.5 2.5]
+   [0.5 2.5]
+   [0.5 2.5]
+   [0.5 2.5]
+   [0.5 2.5]]
+
+  [[1.5 2.5]
+   [1.5 2.5]
+   [1.5 2.5]
+   [1.5 2.5]
+   [1.5 2.5]]
+
+  [[2.5 2.5]
+   [2.5 2.5]
+   [2.5 2.5]
+   [2.5 2.5]
+   [2.5 2.5]]]
+
+
+ [[[0.5 3.5]
+   [0.5 3.5]
+   [0.5 3.5]
+   [0.5 3.5]
+   [0.5 3.5]]
+
+  [[1.5 3.5]
+   [1.5 3.5]
+   [1.5 3.5]
+   [1.5 3.5]
+   [1.5 3.5]]
+
+  [[2.5 3.5]
+   [2.5 3.5]
+   [2.5 3.5]
+   [2.5 3.5]
+   [2.5 3.5]]]], shape=(4, 3, 5, 2), dtype=float32)
+
+"""
+
+
+def _get_anchors(feature_height=4, feature_width=3, level=3):
+    rx = tf.range(feature_width, dtype=tf.float32) + 0.5
+    ry = tf.range(feature_height, dtype=tf.float32) + 0.5
+    print('rx: \n', rx)
+    print('ry: \n', ry)
+    print('\n')
+    centers = tf.meshgrid(rx, ry)
+    print('centers after meshgridding:\n', centers)     # shape = [shape=(4,3), shape=(4,3)]
+    print('\n')
+    centers = tf.stack(centers, axis=-1)        # after stacking: shape = (4, 3, 2)
+    print('centers after stacking\n', centers)
+    center_expand_dims = tf.expand_dims(centers, axis=-2)   # shape = (4, 3, 1, 2)
+    print('center_expand_dims:\n', center_expand_dims)
+    _num_anchors = 4
+    center_tiled = tf.tile(center_expand_dims, [1, 1, _num_anchors, 1]) # shape=(4, 3, 5, 2)
+    print('center_tiled:\n', center_tiled)
+
+    # dims
+    dims = tf.tile(_compute_dims()[0], [feature_height, feature_width, 1, 1])
+    print('#### dims:\n', dims.shape)
+    print('#### cens:\n', center_tiled.shape)
+
+    # anchors
+    anchors = tf.concat([center_tiled, dims], axis=-1)  # shape=(fea_height, fea_width, #_anchors, 4]
+    print('@@@@ anchors:\n', anchors)
+
+    result = tf.reshape(
+        anchors, [feature_height * feature_width * _num_anchors, 4]
+    )
+    print('$$$$ result:\n', result)
+    return tf.reshape(
+        anchors, [feature_height * feature_width * _num_anchors, 4]
+    )
+
+
+print('=============================================================================')
+_get_anchors()
