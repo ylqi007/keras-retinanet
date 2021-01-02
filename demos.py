@@ -292,3 +292,16 @@ def _get_anchors(feature_height=4, feature_width=3, level=3):
 
 print('=============================================================================')
 _get_anchors()
+
+
+def get_anchors(image_height=5, image_width=5):
+    anchors = [_get_anchors(tf.math.ceil(image_height / 2 ** i),
+                            tf.math.ceil(image_width / 2 ** i),
+                            i) for i in range(3, 6)]
+    print('#### anchors:\n', anchors)
+    result = tf.concat(anchors, axis=0)
+    print('@@@@ concate:\n', result)
+
+
+print('=============================================================================')
+get_anchors()

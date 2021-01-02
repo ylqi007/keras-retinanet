@@ -94,7 +94,6 @@ class AnchorBox:
         :param level: An integer representing the level of the feature map in feature pyramid.
         :return: anchor boxes with the shape `(feature_height * feature_width * num_anchors, 4)`
         """
-        # TODO: Do not understand.
         # indexes of x-axis and y-axis
         rx = tf.range(feature_width, dtype=tf.float32) + 0.5
         ry = tf.range(feature_height, dtype=tf.float32) + 0.5
@@ -121,8 +120,11 @@ class AnchorBox:
         :return: anchor boxes for all the feature maps, stacked as a single tensor with shape
         `(toral_anchors, 4)`
         """
+        # tf.math.ceil(image_height / 2 ** i), the height of i-th feature map
+        # tf.math.ceil(image_width / 2 ** i), the width of i-th feature map
+        # i, the level of the feature map
         anchors = [self._get_anchors(tf.math.ceil(image_height / 2 ** i),
                                      tf.math.ceil(image_width / 2 ** i),
                                      i) for i in range(3, 8)]
+        # after concating: shape = ((num_anchors0 + num_anchors1 + num_anchors2 + ...), 4)
         return tf.concat(anchors, axis=0)
-
