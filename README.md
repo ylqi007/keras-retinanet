@@ -53,5 +53,14 @@ sample[2], i.e. class_ids:
  <class 'tensorflow.python.framework.ops.EagerTensor'> (2, 46)
 ```
 
+## train_dataset.map(LabelEncoder.encode_batch, ...)
+
+```python
+sample[0], i.e. batch_images:
+ <class 'tensorflow.python.framework.ops.EagerTensor'> (2, 896, 1280, 3)
+sample[1], i.e. labels:
+ <class 'tensorflow.python.framework.ops.EagerTensor'> (2, 214830, 5)
+```
+
 
 
