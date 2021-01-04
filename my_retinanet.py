@@ -127,9 +127,9 @@ train_dataset = train_dataset.shuffle(8 * batch_size)
 # padding_values[0] = 0.0, padding value for image
 # padding_values[1] = 1e-8, padding value for bboxes
 # padding_values[2] = -1, padding value for labels
-# train_dataset = train_dataset.padded_batch(
-#     batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True
-# ) # images (Batch, H, W, 3); bboxes (Batch, N, 4); class_ids (Batch, N), N=the max num of objects in this batch of images
+train_dataset = train_dataset.padded_batch(
+    batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True
+) # images (Batch, H, W, 3); bboxes (Batch, N, 4); class_ids (Batch, N), N=the max num of objects in this batch of images
 # train_dataset = train_dataset.map(
 #     label_encoder.encode_batch, num_parallel_calls=autotune
 # )
@@ -148,9 +148,9 @@ i = 0
 for sample in train_dataset:
     if i < 1:
         i += 1
-        print("========= sample =========")
-        print('sample[0], i.e. image:\n', type(sample[0]), sample[0].shape)
-        print('sample[1], i.e. bbox:\n', type(sample[1]), sample[1].shape)
+        print("========= samples in a batch =========")
+        print('sample[0], i.e. images:\n', type(sample[0]), sample[0].shape)
+        print('sample[1], i.e. bboxes:\n', type(sample[1]), sample[1].shape)
         print('sample[2], i.e. class_ids:\n', type(sample[2]), sample[2].shape)
     else:
         break
