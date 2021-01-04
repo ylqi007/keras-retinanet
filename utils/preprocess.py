@@ -66,7 +66,7 @@ def resize_and_pad_image(image,
         is resized such that the longer side now equals to this value.
     :param jitter: A list of floats containing minimum and maximum size for scale jittering. If
         available, the shorter side of the image will be resized to a random value in this range.
-    :param strides: The stride for the smallest feature map in the feature pyramid. Can be
+    :param stride: The stride for the smallest feature map in the feature pyramid. Can be
         calculated using `image_size / feature_map_size`.
     :return:
         image: Resized and padded image.
