@@ -94,8 +94,9 @@ class AnchorBox:
         :param level: An integer representing the level of the feature map in feature pyramid.
         :return: anchor boxes with the shape `(feature_height * feature_width * num_anchors, 4)`
         """
+        print("================== AnchorBox._get_anchors() ================")
         # indexes of x-axis and y-axis
-        rx = tf.range(feature_width, dtype=tf.float32) + 0.5
+        rx = tf.range(feature_width, dtype=tf.float32) + 0.5    # Tensor("while/add_2:0", shape=(None,), dtype=float32), i.e. a vector
         ry = tf.range(feature_height, dtype=tf.float32) + 0.5
         # centers of each cell after striding, shape=(len(ry), len(rx), 2)
         centers = tf.stack(tf.meshgrid(rx, ry), axis=-1) * self._strides[level - 3]
@@ -120,9 +121,13 @@ class AnchorBox:
         :return: anchor boxes for all the feature maps, stacked as a single tensor with shape
         `(toral_anchors, 4)`
         """
+        # print("================== AnchorBox.get_anchors() ================")
         # tf.math.ceil(image_height / 2 ** i), the height of i-th feature map
         # tf.math.ceil(image_width / 2 ** i), the width of i-th feature map
         # i, the level of the feature map
+        # image_height:    Tensor("while/strided_slice_2:0", shape=(), dtype=int32)
+        # image_width:     Tensor("while/strided_slice_3:0", shape=(), dtype=int32)
+        # shape=(), i.e. a scalar
         anchors = [self._get_anchors(tf.math.ceil(image_height / 2 ** i),
                                      tf.math.ceil(image_width / 2 ** i),
                                      i) for i in range(3, 8)]

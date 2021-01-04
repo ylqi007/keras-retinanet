@@ -305,3 +305,49 @@ def get_anchors(image_height=5, image_width=5):
 
 print('=============================================================================')
 get_anchors()
+
+
+"""
+# Compute IoU
+"""
+anchor = np.array([[0.5101, 0.2713, 0.8426, 0.8679],
+                  [0.1529, 0.5445, 0.5799, 0.7872],
+                  [0.0067, 0.2022, 0.1865, 0.3775]])
+gt_boxes = np.reshape(np.arange(20), (-1, 4))
+
+
+def compute_iou(boxes1=anchor, boxes2=gt_boxes):
+    """
+    Compute pairwise IoU matrix for given tow sets of boxes.
+
+    :param boxes1: A tensor with shape `(M, 4)` representing bounding boxes where each box is of
+        the format `[x, y, width, height]`.
+    :param boxes2: A tensor with shape `(N, 4)` representing bounding boxes where each box is of
+        the format `[x, y, width, height]`.
+
+    :return: pairwise IoU matrix with shape `(M, N)`, where the values at ith row jth column
+        holds the IoU between ith box and jth box from boxes1 and boxes2 respectively.
+    """
+    # boxes1_corners = convert_to_corners(boxes1) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
+    # boxes2_corners = convert_to_corners(boxes2) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
+    print('boxes1[:, None, :2]\n', boxes1[:, None, :2].shape)   # boxes1: (M, 4)
+    print('boxes2[:, :2]\n', boxes2[:, :2].shape)               # boxes2: (N, 4)
+    lu = tf.maximum(boxes1[:, None, :2], boxes2[:, :2])         # lu: (M, N, 2), [[[max(xmin), max(ymin)]...]]
+    rd = tf.minimum(boxes1[:, None, 2:], boxes2[:, 2:])         # rd: (M, N, 2)
+    intersection = tf.maximum(0.0, rd - lu)
+    intersection_area = intersection[:, :, 0] * intersection[:, :, 1]   # [M, N, w] * [M, N,
+    # h] => (M, N)
+    boxes1_area = boxes1[:, 2] * boxes1[:, 3]   # boxes1 is of format [x, y, w, h], area.shape=(M,)
+    boxes2_area = boxes2[:, 2] * boxes2[:, 3]   # boxes2_area is of format (N,)
+    print('shape of intersection_area:\t', intersection_area.shape)
+    print('shape of boxes2_area:\t\t', boxes2_area.shape)
+    print('shape of boxes1_area[:, None]:\t', boxes1_area[:, None].shape)
+    union_area = tf.maximum(
+        boxes1_area[:, None] + boxes2_area - intersection_area, 1e-8
+    )
+    print(union_area)
+    return tf.clip_by_value(intersection_area / union_area, 0.0, 1.0)
+
+
+print('=============================================================================')
+compute_iou()

@@ -64,7 +64,7 @@ def convert_to_xywh(boxes):
 
 
 def convert_to_corners(boxes):
-    """ Changes the box format to corner coordinates, i.e. (xmin, ymin, xmax, ymax)
+    """ Changes the box format to corner coordinates, i.e. [xmin, ymin, xmax, ymax]
 
     :param boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
         representing bounding boxes where each box is of the format
@@ -72,6 +72,7 @@ def convert_to_corners(boxes):
 
     :return: Converted boxes with shape same as that of boxes.
     """
+    # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
     return tf.concat(
         [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
         axis=-1,
@@ -85,15 +86,16 @@ def compute_iou(boxes1, boxes2):
     """
     Compute pairwise IoU matrix for given tow sets of boxes.
 
-    :param boxes1: A tensor with shape `(N, 4)` representing bounding boxes where each box is of
-    the format `[x, y, width, height]`.
-    :param boxes2: A tensor with shape `(M, 4)` representing bounding boxes where each box is of
-    the format `[x, y, width, height]`.
-    :return: pairwise IoU matrix with shape `(N, M)`, where the values at ith row jth column
-    holds the IoU between ith box and jth box from boxes1 and boxes2 respectively.
+    :param boxes1: A tensor with shape `(M, 4)` representing bounding boxes where each box is of
+        the format `[x, y, width, height]`.
+    :param boxes2: A tensor with shape `(N, 4)` representing bounding boxes where each box is of
+        the format `[x, y, width, height]`.
+
+    :return: pairwise IoU matrix with shape `(M, N)`, where the values at ith row jth column
+        holds the IoU between ith box and jth box from boxes1 and boxes2 respectively.
     """
-    boxes1_corners = convert_to_corners(boxes1)
-    boxes2_corners = convert_to_corners(boxes2)
+    boxes1_corners = convert_to_corners(boxes1) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
+    boxes2_corners = convert_to_corners(boxes2) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
     lu = tf.maximum(boxes1_corners[:, None, :2], boxes2_corners[:, :2])
     rd = tf.minimum(boxes1_corners[:, None, 2:], boxes2_corners[:, 2:])
     intersection = tf.maximum(0.0, rd - lu)

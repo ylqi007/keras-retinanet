@@ -12,7 +12,8 @@
 # ================================================================
 
 import tensorflow as tf
-from utils.utils import *
+from utils.utils import swap_xy
+from utils.utils import convert_to_xywh
 
 
 """
