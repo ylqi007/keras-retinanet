@@ -122,17 +122,17 @@ padding to create rectangular tensors
   [-163.02805    -11.088073     5.7298107   -6.4810452   -1.       ]]], shape=(2, 245520, 5), dtype=float32)
 """
 autotune = tf.data.experimental.AUTOTUNE
-train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
-train_dataset = train_dataset.shuffle(8 * batch_size)
-# padding_values[0] = 0.0, padding value for image
-# padding_values[1] = 1e-8, padding value for bboxes
-# padding_values[2] = -1, padding value for labels
-train_dataset = train_dataset.padded_batch(
-    batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True
-) # images (Batch, H, W, 3); bboxes (Batch, N, 4); class_ids (Batch, N), N=the max num of objects in this batch of images
-train_dataset = train_dataset.map(
-    label_encoder.encode_batch, num_parallel_calls=autotune
-)
+# train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
+# train_dataset = train_dataset.shuffle(8 * batch_size)
+# # padding_values[0] = 0.0, padding value for image
+# # padding_values[1] = 1e-8, padding value for bboxes
+# # padding_values[2] = -1, padding value for labels
+# train_dataset = train_dataset.padded_batch(
+#     batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True
+# ) # images (Batch, H, W, 3); bboxes (Batch, N, 4); class_ids (Batch, N), N=the max num of objects in this batch of images
+# train_dataset = train_dataset.map(
+#     label_encoder.encode_batch, num_parallel_calls=autotune
+# )
 # train_dataset = train_dataset.apply(tf.data.experimental.ignore_errors())
 # train_dataset = train_dataset.prefetch(autotune)
 #
@@ -151,7 +151,16 @@ for sample in train_dataset:
         # print('sample[0]:\n', type(sample[0]), sample[0].shape)
         # print('sample[1]:\n', type(sample[1]), sample[1].shape)
         # print('sample[2]:\n', type(sample[2]), sample[2].shape)
-        print("sample[0], i.e. batch_images:\n", sample[0])
-        print("sample[1], i.e. labels.stack():\n", sample[1])
+        # print("sample[0], i.e. batch_images:\n", sample[0])
+        # print("sample[1], i.e. labels.stack():\n", sample[1])
+        print(sample, '\n', len(sample))
+        print('@@@@ sample["image"]:\n', type(sample["image"]), sample["image"].shape)
+        print('@@@@ sample["image/filename"]:\n', type(sample["image/filename"]), sample["image/filename"].shape)
+        print('@@@@ sample["image/id"]:\n', type(sample["image/id"]), sample["image/id"].shape)
+        print('@@@@ sample["objects"]:\n', type(sample["objects"]), sample["objects"])
+        print('@@@@ sample["objects"]["area"]:\n', type(sample["objects"]["area"]), sample["objects"]["area"])
+        print('@@@@ sample["objects"]["bbox"]:\n', type(sample["objects"]["bbox"]), sample["objects"]["bbox"])
+        print('@@@@ sample["objects"]["is_crowd"]:\n', type(sample["objects"]["is_crowd"]), sample["objects"]["is_crowd"])
+        print('@@@@ sample["objects"]["label"]:\n', type(sample["objects"]["label"]), sample["objects"]["label"])
     else:
         break

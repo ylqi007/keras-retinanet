@@ -109,9 +109,9 @@ def preprocess_data(sample):
     bbox = swap_xy(sample['objects']['bbox'])
     class_id = tf.cast(sample['objects']['label'], dtype=tf.int32)  # Cast from int64 to int32
 
-    # Resize image
+    # Flip image and bbox, and then resize and pad image
     image, bbox = random_flip_horizontal(image, bbox)       # Random flip image and bboxes
-    image, image_shape, _ = resize_and_pad_image(image)
+    image, image_shape, _ = resize_and_pad_image(image)     # Resize and pad image
 
     # Resize bboxes
     # image_shape[0]: height, image_shape[1]: width
