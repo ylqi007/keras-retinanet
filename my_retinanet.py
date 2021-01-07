@@ -33,6 +33,8 @@ from utils.utils import *
 from utils.preprocess import *
 from utils.anchorbox import AnchorBox
 from utils.labelencoder import LabelEncoder
+from utils.demo_feature_pyramid import FeaturePyramid
+from utils.network_utils import build_head
 
 
 """
@@ -153,3 +155,29 @@ for sample in train_dataset:
         print('sample[1], i.e. labels:\n', type(sample[1]), sample[1].shape)
     else:
         break
+
+
+"""
+## Building RetinaNet using a subclassed model.
+"""
+
+
+class RetinaNet(keras.Model):
+    """ A subclassed keras model implementing the RetinaNet architecture.
+
+    """
+    def __init__(self, num_classes, backbone=None, **kwargs):
+        super(RetinaNet, self).__init__(name='RetinaNet', **kwargs)
+        self.fpn = FeaturePyramid(backbone)
+        self.num_classes = num_classes
+
+        prior_probability = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
+        self.cls_head = build_head(9 * num_classes, prior_probability)
+        self.box_head = build_head(9 * 4, "zeros")
+
+    def call(self, image, training=False):
+        # TODO
+        pass
+
+
+

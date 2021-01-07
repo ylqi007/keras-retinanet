@@ -12,6 +12,7 @@
 # ================================================================
 
 from tensorflow import keras
+import tensorflow as tf
 
 from demo_resnet50 import ResNet50
 
@@ -58,3 +59,34 @@ def get_backbone():
 
 
 get_backbone()
+
+
+"""
+## Building the classification and box regression heads.
+
+The RetinaNet model has separate heads for bounding box regression and for predicting class 
+probabilities for the objects. These heads are shared between all the feature maps fo the feature pyramid. 
+"""
+
+
+def build_head(output_filters, bias_init):
+    """ Builds the class/box predictions head.
+
+    :param output_filters: The number of convolution filters in the final layers.
+    :param bias_init: Bias initializer for the final convolution layer.
+
+    :return: A keras sequential model representing either the classification or the box
+        regression head depending on `output_filters`.
+    """
+    head = keras.Sequential([keras.Input(shape=(None, None, 256))])
+    kernel_init = tf.initializers.RandomNormal(0.0, 0.01)
+
+    for _ in range(4):
+        head.add(keras.layers.Conv2D(256, 3, padding='same', kernel_initializer=kernel_init))
+        head.add(keras.layers.ReLU())
+
+    head.add(keras.layers.Conv2D(output_filters, 3, 1,
+                                 padding='same',
+                                 kernel_initializer=kernel_init,
+                                 bias_initializer=bias_init))
+    return head
