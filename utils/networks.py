@@ -35,26 +35,26 @@ Conv2D layer: https://keras.io/api/layers/convolution_layers/convolution2d/
 def get_backbone():
     """Builds ResNet50 with pre-trained imagenet weights"""
     # keras' default ResNet50
-    # backbone = keras.applications.ResNet50(include_top=False, input_shape=[224, 224, 3])
+    # https://github.com/keras-team/keras/blob/6a46d5259d079a58a9d32ad31a9e9da9c0ea563f/keras/applications/resnet.py#L457
+    backbone = keras.applications.ResNet50(include_top=False, input_shape=[224, 224, 3])
 
-    # utils.demo_resnet50's ResNet50
-    backbone = ResNet50(include_top=False, input_shape=[224, 224, 3])
-    # c3_output, c4_output, c5_output = [
-    #     backbone.get_layer(layer_name).output
-    #     for layer_name in ["conv3_block4_out", "conv4_block6_out", "conv5_block3_out"]
-    # ]
+    # My utils.demo_resnet50's ResNet50
+    # backbone = ResNet50(include_top=False, input_shape=[224, 224, 3])
+
+    c3_output, c4_output, c5_output = [
+        backbone.get_layer(layer_name).output
+        for layer_name in ["conv3_block4_out", "conv4_block6_out", "conv5_block3_out"]
+    ]
 
     # print(backbone)
-    # print("c3_output: ", c3_output)
+    print("c3_output: ", c3_output)
     backbone.summary(line_length=120)
 
-    # print('=============================')
-    # for layer in backbone.layers:
-    #     print(layer.output_shape)
+    print('#### backbone.inputs: ', backbone.inputs)
 
-    # return keras.Model(
-    #     inputs=[backbone.inputs], outputs=[c3_output, c4_output, c5_output]
-    # )
+    return keras.Model(
+        inputs=[backbone.inputs], outputs=[c3_output, c4_output, c5_output]
+    )
 
 
 get_backbone()
