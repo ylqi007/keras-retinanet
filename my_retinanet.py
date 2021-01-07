@@ -173,11 +173,21 @@ class RetinaNet(keras.Model):
 
         prior_probability = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
         self.cls_head = build_head(9 * num_classes, prior_probability)
-        self.box_head = build_head(9 * 4, "zeros")
+        self.box_head = build_head(9 * 4, "zeros")  # A=9, i.e. 9 anchors
 
     def call(self, image, training=False):
-        # TODO
-        pass
+        features = self.fpn(image, training=training)
+        N = tf.shape(image)[0]      # batch size
+        cls_outputs = []
+        box_outputs = []
+
+        for feature in features:
+            box_outputs.append(tf.reshape(self.box_head(feature), [N, -1, 4]))  # # of total anchors
+            cls_outputs.append(tf.reshape(self.cls_head(feature), [N, -1, self.num_classes]))
+
+        cls_outputs = tf.concat(cls_outputs, axis=1)
+        box_outputs = tf.concat(box_outputs, axis=1)
+        return tf.concat([box_outputs, cls_outputs], axis=-1)   # N, no. of total anchors, 4+num_cls
 
 
 
