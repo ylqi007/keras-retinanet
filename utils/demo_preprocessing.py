@@ -12,8 +12,8 @@
 # ================================================================
 
 import tensorflow as tf
-from utils.utils import swap_xy
-from utils.utils import convert_to_xywh
+from utils.demo_utils import swap_xy
+from utils.demo_utils import convert_to_xywh
 
 
 """
@@ -40,6 +40,7 @@ def random_flip_horizontal(image, boxes):
 
     :return: Randomly flipped image and boxes.
     """
+    # tf.random.uniform(()), will generate a random value, the internal () represents the shape, i.e. a number here.
     if tf.random.uniform(()) > 0.5:
         image = tf.image.flip_left_right(image)
         boxes = tf.stack([1 - boxes[:, 2], boxes[:, 1],

@@ -74,10 +74,13 @@ sample[1], i.e. labels:
   - [x] swap_xy(boxes)
   - [x] convert_to_xywh(boxes)
   - [x] convert_to_corners(boxes)
-- [ ] Computing pairwise Intersection Over Union (IOU), `demo_utils.py`
+- [x] Computing pairwise Intersection Over Union (IOU), `demo_utils.py`
   - [x] compute_iou(boxes1, boxes2)
 - [ ] Implementing Anchor generator
-- [ ] Preprocessing data
+- [x] Preprocessing data, `demo_preprocessing.py`
+  - [x] random_flip_horizontal(image, boxes)
+  - [x] resize_and_pad_image(...)
+  - [x] preprocess_data(sample)
 - [ ] Encoding labels
 - [ ] Building the ResNet50 backbone
 - [ ] Building Feature Pyramid Network as a custom layer
