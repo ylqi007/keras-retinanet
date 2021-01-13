@@ -17,7 +17,7 @@
 
 import tensorflow as tf
 from tensorflow import keras
-from demo_resnet50 import get_backbone
+from utils.demo_resnet50 import get_backbone
 
 
 class FeaturePyramid(keras.layers.Layer):
@@ -33,12 +33,11 @@ class FeaturePyramid(keras.layers.Layer):
         self.conv_c3_1x1 = keras.layers.Conv2D(256, 1, 1, "same")   # filters=256, kernel_size=1, strides=1
         self.conv_c4_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
         self.conv_c5_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
-
         self.conv_c3_3x3 = keras.layers.Conv2D(256, 3, 1, "same")   # kernel_size=3
         self.conv_c4_3x3 = keras.layers.Conv2D(256, 3, 1, "same")
         self.conv_c5_3x3 = keras.layers.Conv2D(256, 3, 1, "same")
-        self.conv_c6_3x3 = keras.layers.Conv2D(256, 3, 1, "same")
-        self.conv_c7_3x3 = keras.layers.Conv2D(256, 3, 1, "same")
+        self.conv_c6_3x3 = keras.layers.Conv2D(256, 3, 2, "same")   # kernel_size=3, strides=2
+        self.conv_c7_3x3 = keras.layers.Conv2D(256, 3, 2, "same")
 
         self.upsample_2x = keras.layers.UpSampling2D(2)
 
