@@ -64,3 +64,37 @@ sample[1], i.e. labels:
 
 
 
+- [x] utils.demo_feature_pyramid.py
+
+
+### Object Detection with RetinaNet
+- [x] Introduction
+- [x] Downloading the COCO2017 dataset
+- [ ] Implementing utility functions, `demo_utils.py`
+  - [x] swap_xy(boxes)
+  - [x] convert_to_xywh(boxes)
+  - [x] convert_to_corners(boxes)
+- [ ] Computing pairwise Intersection Over Union (IOU), `demo_utils.py`
+  - [x] compute_iou(boxes1, boxes2)
+- [ ] Implementing Anchor generator
+- [ ] Preprocessing data
+- [ ] Encoding labels
+- [ ] Building the ResNet50 backbone
+- [ ] Building Feature Pyramid Network as a custom layer
+- [ ] Building the classification and box regression heads.
+- [ ] Building RetinaNet using a subclassed model
+- [ ] Implementing a custom layer to decode predictions
+- [ ] Implementing Smooth L1 loss and Focal Loss as keras custom losses
+- [ ] Setting up training parameters
+- [ ] Initializing and compiling model
+- [ ] Setting up callbacks
+- [ ] Load the COCO2017 dataset using TensorFlow Datasets
+- [ ] Setting up a tf.data pipeline
+- [ ] Training the model
+- [ ] Loading weights
+- [ ] Building inference model 
+
+
+## Reference:
+1. [Difference between stack and concat](http://louistiao.me/notes/difference-between-keras-stack-and-concatenate/)
+  * `tf.stack` will create a new axis.

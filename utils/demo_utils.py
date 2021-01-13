@@ -11,9 +11,6 @@
 #
 # ================================================================
 
-import os
-import re
-import zipfile
 
 import numpy as np
 import tensorflow as tf
@@ -38,16 +35,19 @@ def swap_xy(boxes):
     For example, [ymin, xmin, ymax, xmax] to [xmin, ymin, xmax, ymax], or vice versa.
 
     :param boxes: A tensor with shape (num_boxes, 4) representing bounding boxes.
+
     :return: swapped boxes with shape same as that of boxes.
     """
     # boxes is with shape (num_boxes, 4), boxes[:, 0] is with shape (num_boxes,)
+    # boxes[:, i].shape = (num_boxes,), when using `tf.stack([], axis=-1)`, it will reshape boxes[:, i] to (num_boxes, 1), and then stack them together.
     # tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]]), shape=(4, None)
     # tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1), shape=(None, 4)
     return tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1)
 
 
 def convert_to_xywh(boxes):
-    """ Changes the box format to center, width and height, i.e. [x, y, w, h]
+    """ Changes the box format to center, width and height,
+    i.e. [xmin, ymin, xmax, ymax] to [x, y, w, h]
 
     :param boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)` representing
         bounding boxes where each box is of the format `[xmin, ymin, xmax, ymax]`.
@@ -55,7 +55,10 @@ def convert_to_xywh(boxes):
     :return: Converted boxes with shape as that of boxes. `[x, y, width, height]`
     """
     # boxes is with shape (num_boxes, 4), boxes[:, 0] is with shape (num_boxes,)
-    # tf.concat([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]]), shape=(None, 2)
+    # (boxes[..., :2] + boxes[..., 2:]) / 2.0, shape is (num_boxes, 2)
+    # boxes[..., 2:] - boxes[..., :2]], shape is (num_boxes, 2)
+    # After tf.concat(..., axis=-1), (num_boxes, 2) + (num_boxes, 2) will become (num_boxes, 2+2)
+    # ??? tf.concat([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]]), shape=(None, 2)
     # tf.concat([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1), shape=(None, 4)
     return tf.concat(
         [(boxes[..., :2] + boxes[..., 2:]) / 2.0, boxes[..., 2:] - boxes[..., :2]],
@@ -64,7 +67,8 @@ def convert_to_xywh(boxes):
 
 
 def convert_to_corners(boxes):
-    """ Changes the box format to corner coordinates, i.e. [xmin, ymin, xmax, ymax]
+    """ Changes the box format to corner coordinates,
+    i.e. [x, y, width, height] to [xmin, ymin, xmax, ymax]
 
     :param boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
         representing bounding boxes where each box is of the format
@@ -82,6 +86,16 @@ def convert_to_corners(boxes):
 # TODO: Here is a split line.
 
 
+"""
+## Computing pairwise Intersection Over Union (IOU)
+
+As we will see later in the example, we would be assigning ground truth boxes to anchor boxes 
+based on the extend of overlapping. This will require us to calculate the Intersection Over 
+Union (IOU) between all the anchor boxes and ground truth boxes pairs.
+将 ground truth box，匹配到 anchor boxes。
+"""
+
+
 def compute_iou(boxes1, boxes2):
     """
     Compute pairwise IoU matrix for given tow sets of boxes.
@@ -96,16 +110,20 @@ def compute_iou(boxes1, boxes2):
     """
     boxes1_corners = convert_to_corners(boxes1) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
     boxes2_corners = convert_to_corners(boxes2) # [x, y, width, height] ==> [xmin, ymin, xmax, ymax]
-    lu = tf.maximum(boxes1_corners[:, None, :2], boxes2_corners[:, :2])
+    lu = tf.maximum(boxes1_corners[:, None, :2], boxes2_corners[:, :2]) # (M,1,2) - (N,2) => (M,N,2)
     rd = tf.minimum(boxes1_corners[:, None, 2:], boxes2_corners[:, 2:])
-    intersection = tf.maximum(0.0, rd - lu)
-    intersection_area = intersection[:, :, 0] * intersection[:, :, 1]
-    boxes1_area = boxes1[:, 2] * boxes1[:, 3]
-    boxes2_area = boxes2[:, 2] * boxes2[:, 3]
+    intersection = tf.maximum(0.0, rd - lu)     # width and height of intersection area, (M, N, 2)
+    intersection_area = intersection[:, :, 0] * intersection[:, :, 1]   # (M, N)
+    boxes1_area = boxes1[:, 2] * boxes1[:, 3]   # shape=(M,)
+    boxes2_area = boxes2[:, 2] * boxes2[:, 3]   # shape=(N,)
+    # boxes1_area[:, None] + boxes2_area ==> (M, N)
     union_area = tf.maximum(
         boxes1_area[:, None] + boxes2_area - intersection_area, 1e-8
     )
     return tf.clip_by_value(intersection_area / union_area, 0.0, 1.0)
+
+
+# TODO: Here is a split line.
 
 
 def visualize_detections(image, boxes, classes, scores, figsize=(7, 7),
@@ -127,6 +145,9 @@ def visualize_detections(image, boxes, classes, scores, figsize=(7, 7),
                 clip_box=ax.clipbox, clip_on=True, )
     plt.show()
     return ax
+
+
+# TODO: Here is a split line.
 
 
 def random_flip_horizontal(image, boxes):
