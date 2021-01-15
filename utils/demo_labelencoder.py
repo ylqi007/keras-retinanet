@@ -13,19 +13,19 @@
 
 import tensorflow as tf
 
-from utils.utils import compute_iou
+from utils.demo_utils import compute_iou
 from utils.anchorbox import AnchorBox
 
 
 """
 ## Encoding labels
 
-The raw labels, consisting of bounding boxes and class ids need to be transformed into targets
-for training. This transformation consists of the following steps:
-- Generating anchor boxes for the given image dimensions.
-- Assigning ground truth boxes to the anchor boxes.
+The raw labels, consisting of bounding boxes and class ids (i.e. boundaries + cls_id) need to be 
+transformed into targets for training. This transformation consists of the following steps:
+- Generating anchor boxes for the given image dimensions.   给定 dimension，生成 anchor boxes
+- Assigning ground truth boxes to the anchor boxes.         将 ground truth boxes 匹配到 anchor boxes
 - The anchor boxes that are not assigned any objects, are either assigned the background class or 
-ignored depending on the IoU.
+ignored depending on the IoU.   剩下没有被匹配到的 anchor boxes，要么是 background，要么是 negative case
 - Generating the class classification and regression targets using anchor boxes.
 """
 
@@ -73,7 +73,7 @@ class LabelEncoder:
         """
         # TODO: matched_gt_idx
         print("================== LabelEncoder._match_anchor_boxes() ================")
-        iou_matrix = compute_iou(anchor_boxes, gt_boxes)    # (M, N), M anchor_boxes, N gt_boxes
+        iou_matrix = compute_iou(anchor_boxes, gt_boxes)    # (M, N), M anchor_boxes, N gt_boxes, iou_matrix[i][j] represents the IoU between anchor_boxes[i] and gt_boxes[j]
         # match each anchor box to a gt_box
         max_iou = tf.reduce_max(iou_matrix, axis=1)         # (M,), keep M anchor boxes' IoU
         # the index of matched gt_box
@@ -81,7 +81,7 @@ class LabelEncoder:
         # positive_mask:   Tensor("while/GreaterEqual:0", shape=(None,), dtype=bool)
         # negative_mask:   Tensor("while/Less:0", shape=(None,), dtype=bool)
         # ignore_mask:     Tensor("while/LogicalNot:0", shape=(None,), dtype=bool)
-        matched_gt_idx = tf.argmax(iou_matrix, axis=1)      # (M,), get idx of max IoU in each row
+        matched_gt_idx = tf.argmax(iou_matrix, axis=1)      # (M,), get idx of max IoU in each row, matched_gt_idx[i] represent anchor_boxes[i] matched with gt_boxes[matched_gt_idx[i]]
         positive_mask = tf.greater_equal(max_iou, match_iou)    # the max_iou >= match_iou
         negative_mask = tf.less(max_iou, ignore_iou)        # the max_iou < ignore_iou
         ignore_mask = tf.logical_not(tf.logical_or(positive_mask, negative_mask))
@@ -92,7 +92,12 @@ class LabelEncoder:
     def _compute_box_target(self, anchor_boxes, matched_gt_boxes):
         """ Transforms the ground truth boxes into targets for training.
 
+        Each anchor box will be matched with a gt box, and then we need to compute the distance
+        between anchor box and its corresponding gt_box:
+        i.e. distance between centroids + log distance between width and height
+
         :param anchor_boxes: [xmin, ymin, xmax, ymax] ?, [x, y, w, h] ? seems [x, y, w, h]
+            anchor_boxes should be [x, y, w, h].
         :param matched_gt_boxes:
         :return:
         """
@@ -118,7 +123,7 @@ class LabelEncoder:
         * self._anchor_box = AnchorBox()
         * image_shape[1]: height; image_shape[2]: width
         """
-        print("================== LabelEncoder._encode_sample() ================")
+        # print("================== LabelEncoder._encode_sample() ================")
         # anchor_boxes.shape = ((num_anchors0 + num_anchors1 + num_anchors2 + ...), 4)
         # num_anchor0 = tf.math.ceil(image_height / 2 ** 3) * len(area) * len(ratio)
         # M = num_anchor0 + num_anchor1 + num_anchor2 + ...
@@ -131,6 +136,7 @@ class LabelEncoder:
         # ignore_mask.shape:     (None,)
         matched_gt_idx, positive_mask, ignore_mask = self._match_anchor_boxes(anchor_boxes,
                                                                               gt_boxes)
+        # matched_gt_idx will have the same length with anchor_boxes, since each anchor_boxes will matched with a gt_boxes, and a gt_boxes may match multi anchors
         matched_gt_boxes = tf.gather(gt_boxes, matched_gt_idx)  # matched_gt_idx.shape = (M,)
         box_target = self._compute_box_target(anchor_boxes, matched_gt_boxes)   # gt_box to anchor
         # cls_ids:              Tensor("while/Cast:0", shape=(None,), dtype=float32)
@@ -141,7 +147,7 @@ class LabelEncoder:
         )   # Tensor("while/SelectV2:0", shape=(None,), dtype=float32)
         # cls_target after th.where(): Tensor("while/SelectV2_1:0", shape=(None,), dtype=float32)
         cls_target = tf.where(tf.equal(ignore_mask, 1.0), -2.0, cls_target)  # -2.0, ignored anchor
-        cls_target = tf.expand_dims(cls_target, axis=-1)
+        cls_target = tf.expand_dims(cls_target, axis=-1)                    # then -1.0, neg anchor
         # box_target: Tensor("while/truediv_17:0", shape=(None, 4), dtype=float32)
         # cls_target: Tensor("while/ExpandDims_5:0", shape=(None, 1), dtype=float32)
         label = tf.concat([box_target, cls_target], axis=-1)
@@ -160,7 +166,7 @@ class LabelEncoder:
             * batch_images.shape ==> (2, None, None, 3), where 2 = batch_size
         tf.TensorArray(): https://www.tensorflow.org/api_docs/python/tf/TensorArray
         """
-        print("================== LabelEncoder.encode_batch() ================")
+        # print("================== LabelEncoder.encode_batch() ================")
         images_shape = tf.shape(batch_images)   # Tensor("Shape:0", shape=(4,), dtype=int32)
         batch_size = images_shape[0]    # Tensor("strided_slice:0", shape=(), dtype=int32)
         # <tensorflow.python.ops.tensor_array_ops.TensorArray object at 0x7fd55435f520>

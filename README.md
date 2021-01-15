@@ -82,6 +82,11 @@ sample[1], i.e. labels:
   - [x] resize_and_pad_image(...)
   - [x] preprocess_data(sample)
 - [ ] Encoding labels
+  - [x] compute_iou
+  - [x] AnchorBox
+  AnchorBox will generate a list of anchors for specific dimensions, and each anchor box will be 
+    assigned with a gt_boxes. Then we need to compute the target_distance between anchor box and 
+    its gt_box
 - [ ] Building the ResNet50 backbone
 - [ ] Building Feature Pyramid Network as a custom layer
 - [ ] Building the classification and box regression heads.
