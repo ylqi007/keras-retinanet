@@ -39,9 +39,10 @@ class RetinaNet(keras.Model):
         self.box_head = build_head(9 * 4, "zeros")  # A=9, i.e. 9 anchors
 
     def call(self, image, training=False):
+        # (<tf.Tensor 'RetinaNet/FeaturePyramid/conv2d_3/BiasAdd:0' shape=(2, 28, 28, 256) dtype=float32>, <tf.Tensor 'RetinaNet/FeaturePyramid/conv2d_4/BiasAdd:0' shape=(2, 14, 14, 256) dtype=float32>, <tf.Tensor 'RetinaNet/FeaturePyramid/conv2d_5/BiasAdd:0' shape=(2, 7, 7, 256) dtype=float32>, <tf.Tensor 'RetinaNet/FeaturePyramid/conv2d_6/BiasAdd:0' shape=(2, 4, 4, 256) dtype=float32>, <tf.Tensor 'RetinaNet/FeaturePyramid/conv2d_7/BiasAdd:0' shape=(2, 2, 2, 256) dtype=float32>)
         features = self.fpn(image, training=training)
-        print("========= utils.demo_retinanet.RetinaNet.call() ==========")
-        print(features)
+        # print("========= utils.demo_retinanet.RetinaNet.call() ==========")
+        # print(features)
         N = tf.shape(image)[0]      # batch size
         cls_outputs = []
         box_outputs = []

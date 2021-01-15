@@ -13,7 +13,7 @@
 
 import os
 import warnings
-from imagenet_utils import _obtain_input_shape
+from utils.imagenet_utils import _obtain_input_shape
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import backend
@@ -331,7 +331,7 @@ def get_backbone():
     """Builds ResNet50 with pre-trained imagenet weights"""
     # keras' default ResNet50
     # https://github.com/keras-team/keras/blob/6a46d5259d079a58a9d32ad31a9e9da9c0ea563f/keras/applications/resnet.py#L457
-    backbone = keras.applications.ResNet50(include_top=False, input_shape=[224, 224, 3])
+    backbone = keras.applications.ResNet50(include_top=False, input_shape=[None, None, 3])
 
     # My utils.demo_resnet50's ResNet50
     # backbone = ResNet50(include_top=False, input_shape=[224, 224, 3])
@@ -350,6 +350,3 @@ def get_backbone():
     return keras.Model(
         inputs=[backbone.inputs], outputs=[c3_output, c4_output, c5_output]
     )
-
-
-get_backbone()
